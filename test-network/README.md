@@ -13,6 +13,7 @@ If after following all the steps mentioned above , if you are not able to set up
 1. Try to make sure you kill all running docker containers - docker kill $(docker ps -q)
 2. Try to make sure all the images are removed - docker rmi $(docker images -q)
 
+You can analyse ./../application-gateway-go to see how you can call the smart contract which are deployed
 # Running the test network
 
 You can use the `./network.sh` script to stand up a simple Fabric test network. The test network has two peer organizations with one peer each and a single node raft ordering service. You can also use the `./network.sh` script to create channels and deploy chaincode. For more information, see [Using the Fabric test network](https://hyperledger-fabric.readthedocs.io/en/latest/test_network.html). The test network is being introduced in Fabric v2.0 as the long term replacement for the `first-network` sample.
