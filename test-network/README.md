@@ -1,3 +1,18 @@
+# FAQs
+Please go through the following materials 
+
+https://p2epl-my.sharepoint.com/:v:/g/personal/gaurav_singh_mai_io/Eb5kV3jVtw1Bs7-I-UOnn-wBZK4UHKsrbrw5MWBsWQshAw?referrer=Teams.TEAMS-WEB&referrerScenario=MeetingChicletGetLink.view.view
+
+https://p2epl-my.sharepoint.com/:v:/g/personal/gaurav_singh_mai_io/EXxxGxGAmv5DkU3pc2-7QbQBbkcJ9gdItOijv53LyvhkeQ?referrer=Teams.TEAMS-WEB&referrerScenario=MeetingChicletGetLink.view.view
+
+https://p2epl-my.sharepoint.com/:v:/g/personal/kamal_malkani_mai_io/EQrQUt5tFrlIhSBhUI5fJfMBzAJ_X1t2jCjA_pC2ib_jdg?referrer=Teams.TEAMS-WEB&referrerScenario=MeetingChicletGetLink.view.view
+
+https://p2eprojects.atlassian.net/browse/KALP-1014 : this ticket consists of documents which can help in setting up the system
+
+If after following all the steps mentioned above , if you are not able to set up network 
+1. Try to make sure you kill all running docker containers - docker kill $(docker ps -q)
+2. Try to make sure all the images are removed - docker rmi $(docker images -q)
+
 # Running the test network
 
 You can use the `./network.sh` script to stand up a simple Fabric test network. The test network has two peer organizations with one peer each and a single node raft ordering service. You can also use the `./network.sh` script to create channels and deploy chaincode. For more information, see [Using the Fabric test network](https://hyperledger-fabric.readthedocs.io/en/latest/test_network.html). The test network is being introduced in Fabric v2.0 as the long term replacement for the `first-network` sample.
