@@ -6,106 +6,57 @@
 
 'use strict';
 
-const { Contract } = require('fabric-contract-api');
+const { Kalpcontract, Kalpsdk } = require('kalp-sdk-node');
+// const { Kalpsdk } = require('./klap ');
 
-class FabCar extends Contract {
+class FabCar extends Kalpcontract {
 
-    async initLedger(ctx) {
-        console.info('============= START : Initialize Ledger ===========');
-        const cars = [
-            {
-                color: 'blue',
-                make: 'Toyota',
-                model: 'Prius',
-                owner: 'Tomoko',
-            },
-            {
-                color: 'red',
-                make: 'Ford',
-                model: 'Mustang',
-                owner: 'Brad',
-            },
-            {
-                color: 'green',
-                make: 'Hyundai',
-                model: 'Tucson',
-                owner: 'Jin Soo',
-            },
-            {
-                color: 'yellow',
-                make: 'Volkswagen',
-                model: 'Passat',
-                owner: 'Max',
-            },
-            {
-                color: 'black',
-                make: 'Tesla',
-                model: 'S',
-                owner: 'Adriana',
-            },
-            {
-                color: 'purple',
-                make: 'Peugeot',
-                model: '205',
-                owner: 'Michel',
-            },
-            {
-                color: 'white',
-                make: 'Chery',
-                model: 'S22L',
-                owner: 'Aarav',
-            },
-            {
-                color: 'violet',
-                make: 'Fiat',
-                model: 'Punto',
-                owner: 'Pari',
-            },
-            {
-                color: 'indigo',
-                make: 'Tata',
-                model: 'Nano',
-                owner: 'Valeria',
-            },
-            {
-                color: 'brown',
-                make: 'Holden',
-                model: 'Barina',
-                owner: 'Shotaro',
-            },
-        ];
+    constructor() {
+        console.info('============= START : FabCar constructor ===========');
+        super('Myfabcar', true);
+      }
 
-        for (let i = 0; i < cars.length; i++) {
-            cars[i].docType = 'car';
-            await ctx.stub.putState('CAR' + i, Buffer.from(JSON.stringify(cars[i])));
-            console.info('Added <--> ', cars[i]);
-        }
-        console.info('============= END : Initialize Ledger ===========');
-    }
-
-    async queryCar(ctx, carNumber) {
-        const carAsBytes = await ctx.stub.getState(carNumber); // get the car from chaincode state
-        if (!carAsBytes || carAsBytes.length === 0) {
-            throw new Error(`${carNumber} does not exist`);
-        }
-        console.log(carAsBytes.toString());
-        return carAsBytes.toString();
-    }
-
-    async createCar(ctx, carNumber, make, model, color, owner) {
+       async createCar(ctx, carData) {
         console.info('============= START : Create Car ===========');
 
-        const car = {
-            color,
-            docType: 'car',
-            make,
-            model,
-            owner,
-        };
+        let input = JSON.parse(carData)
+        console.info('input',input);
 
-        await ctx.stub.putState(carNumber, Buffer.from(JSON.stringify(car)));
+
+        let carNumber  = input.CarNumber
+        console.info('carNumber',carNumber);
+
+        await ctx.putStateWithKYC(carNumber, Buffer.from(JSON.stringify(input)));
         console.info('============= END : Create Car ===========');
     }
+
+     async createCarwithGasFee(ctx, carData) {
+        console.info('============= START : Create Car ===========');
+
+        let input = JSON.parse(carData)
+        console.info('input',input);
+
+
+        let carNumber  = input.CarNumber
+        console.info('carNumber',carNumber);
+
+        await ctx.putStateWithKYC(carNumber, Buffer.from(JSON.stringify(input)));
+        console.info('============= END : Create Car ===========');
+    }
+    // async createCar(ctx, carNumber, make, model, color, owner) {
+    //     console.info('============= START : Create Car ===========');
+
+    //     const car = {
+    //         color,
+    //         docType: 'car',
+    //         make,
+    //         model,
+    //         owner,
+    //     };
+
+    //     await Kalpsdk.putStateWithoutKYC(carNumber, Buffer.from(JSON.stringify(car)));
+    //     console.info('============= END : Create Car ===========');
+    // }
 
     async queryAllCars(ctx) {
         const startKey = '';

@@ -17,8 +17,8 @@
     "author": "Hyperledger",
     "license": "Apache-2.0",
     "dependencies": {
-        "fabric-contract-api": "^2.0.0",
-        "fabric-shim": "^2.0.0"
+        "kalp-sdk-node": "git+https://github.com/kamalp2e/kalp-shim.git#main/apis/fabric-contract-api",
+        "fabric-shim": "^2.0.0"  
     },
     "devDependencies": {
         "chai": "^4.1.2",

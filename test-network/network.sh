@@ -29,7 +29,7 @@ trap "popd > /dev/null" EXIT
 . scripts/utils.sh
 
 : ${CONTAINER_CLI:="docker"}
-: ${CONTAINER_CLI_COMPOSE:="${CONTAINER_CLI}-compose"}
+: ${CONTAINER_CLI_COMPOSE:="${CONTAINER_CLI} compose"}
 infoln "Using ${CONTAINER_CLI} and ${CONTAINER_CLI_COMPOSE}"
 
 # Obtain CONTAINER_IDS and remove them
@@ -339,6 +339,7 @@ function networkDown() {
 
   # Don't remove the generated artifacts -- note, the ledgers are always removed
   if [ "$MODE" != "restart" ]; then
+    echo "Removing volumes"
     # Bring down the network, deleting the volumes
     ${CONTAINER_CLI} volume rm docker_orderer.example.com docker_peer0.org1.example.com docker_peer0.org2.example.com
     #Cleanup the chaincode containers
@@ -370,10 +371,10 @@ CLI_DELAY=3
 CHANNEL_NAME="kalptantra"
 # chaincode name defaults to "NA"
 # CC_NAME="kyc"
-CC_NAME="myipr"
+CC_NAME="calculator-basic"
 # chaincode path defaults to "NA"
 # CC_SRC_PATH="../chaincode/chaincode-user-kyc"
-CC_SRC_PATH="../chaincode/myipr-chaincode"
+CC_SRC_PATH="../chaincode/calculator-basic/chaincode-go"
 # endorsement policy defaults to "NA". This would allow chaincodes to use the majority default policy.
 CC_END_POLICY="NA"
 # collection configuration defaults to "NA"
@@ -398,9 +399,9 @@ CC_SRC_LANGUAGE="go"
 # default to running the docker commands for the CCAAS
 CCAAS_DOCKER_RUN=true
 # Chaincode version
-CC_VERSION="3.0"
+CC_VERSION="1.0"
 # Chaincode definition sequence
-CC_SEQUENCE=3
+CC_SEQUENCE=2
 # default database
 DATABASE="leveldb"
 
