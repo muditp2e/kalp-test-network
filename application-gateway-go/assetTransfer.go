@@ -7,6 +7,7 @@ SPDX-License-Identifier: Apache-2.0
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"crypto/x509"
@@ -15,6 +16,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hyperledger/fabric-gateway/pkg/client"
@@ -27,7 +30,7 @@ import (
 
 const (
 	mspID        = "p2epro"
-	cryptoPath   = "/home/gaurav/kalp-test-network/test-network/organizations/peerOrganizations/org1.example.com"
+	cryptoPath   = "/home/mudit/Documents/projects/kamalp2e/kalp-test-network/test-network/organizations/peerOrganizations/org1.example.com"
 	certPath     = cryptoPath + "/users/User1@org1.example.com/msp/signcerts/cert.pem"
 	keyPath      = cryptoPath + "/users/User1@org1.example.com/msp/keystore/"
 	tlsCertPath  = cryptoPath + "/peers/peer0.org1.example.com/tls/ca.crt"
@@ -40,7 +43,7 @@ var assetId = fmt.Sprintf("asset%d", now.Unix()*1e3+int64(now.Nanosecond())/1e6)
 
 func main() {
 	channelName := "kalptantra"
-	chaincodeName := "kyc"
+	chaincodeName := "gini1"
 
 	// The gRPC client connection should be shared by all Gateway connections to this endpoint
 	clientConnection := newGrpcConnection()
@@ -78,12 +81,208 @@ func main() {
 	network := gw.GetNetwork(channelName)
 	contract := network.GetContract(chaincodeName)
 
-	//initLedger(contract)
+	commands := []string{"initLedger", "initialize", "mint", "balanceOf", "totalSupply", "name", "symbol", "decimals", "allow", "deny", "approve", "allowance", "cleanAll"}
+	var s string
+	for i, fn := range commands {
+		s = s + fmt.Sprintf("%d: %s\n", i, fn)
+	}
+	for {
+		// Take user input
+		fmt.Println("Enter a command:\n" + s)
+		reader := bufio.NewReader(os.Stdin)
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			fmt.Println("Error reading input:", err)
+			return
+		}
+		// input := "3"
+
+		// Trim whitespace and convert to lowercase
+		commandIndex, err := strconv.Atoi(strings.TrimSpace(input))
+
+		if err != nil || commandIndex >= len(commands) {
+			fmt.Println("Invalid command index:", input)
+			return
+		}
+
+		switch commandIndex {
+		case 0:
+			initLedger(contract)
+		case 1:
+			initialize(contract, "GINI", "GINI", "klp-6b616c70627269646775-cc")
+		case 2:
+			mint(contract, "user1", "100000000")
+		case 3:
+			balanceOf(contract, "user1")
+			// balanceOf(contract, "klp-6b616c70627269646775-cc")
+			balanceOf(contract, "klp-6b616c70627269646766-cc")
+		case 4:
+			GenericEvaluateTransaction(contract, "TotalSupply")
+		case 5:
+			GenericEvaluateTransaction(contract, "Name")
+		case 6:
+			GenericEvaluateTransaction(contract, "Symbol")
+		case 7:
+			GenericEvaluateTransaction(contract, "Decimals")
+		case 8:
+			GenericSubmitTransaction(contract, "Allow", "878ab9087t756c7857d596876e78687087f898")
+		case 9:
+			GenericSubmitTransaction(contract, "Deny", "878ab9087t756c7857d596876e78687087f898")
+		case 10:
+			GenericSubmitTransaction(contract, "Approve", "klp-6b616c70627269646766-cc", "1234567")
+		case 11:
+			GenericEvaluateTransaction(contract, "Allowance", "user1", "klp-6b616c70627269646766-cc")
+		case 12:
+			GenericEvaluateTransaction(contract, "DeleteDocTypes", `{"selector":{"docType":"UTXO"}}`)
+			GenericEvaluateTransaction(contract, "DeleteDocTypes", `{"selector":{"docType":"UserRoleMap"}}`)
+			GenericEvaluateTransaction(contract, "DeleteDocTypes", `{"selector":{"_id":{"$regex":"denyList"}}}`)
+			GenericEvaluateTransaction(contract, "DeleteDocTypes", `{"selector":{"docType":"Approval"}}`)
+			GenericEvaluateTransaction(contract, "DeleteDocTypes", `{"selector":{"_id":"name"}}`)
+			GenericEvaluateTransaction(contract, "DeleteDocTypes", `{"selector":{"_id":"symbol"}}`)
+			// GenericEvaluateTransaction(contract, "DeleteDocTypes", `{"selector":{"_id":"gasFees"}}`)
+
+		}
+	}
+
+	// initLedger(contract)
+	// initialize(contract, "GINI", "GINI", "klp-6b616c70627269646766-cc")
 	//getAllAssets(contract)
 	// createAsset(contract)
-	readAssetByID(contract)
+	// readAssetByID(contract)
 	//transferAssetAsync(contract)
 	//exampleErrorHandling(contract)
+}
+
+func initialize(contract *client.Contract, name, symbol, vestingContract string) {
+	fmt.Printf("\n--> Submit Transaction: Initialize, function creates the initial set of assets on the ledger \n")
+
+	_, err := contract.SubmitTransaction("Initialize", name, symbol, vestingContract)
+	if err != nil {
+		fmt.Println("failed to submit transaction: %w", getErrorDetails(err))
+		return
+	}
+
+	fmt.Printf("*** Transaction committed successfully\n")
+}
+
+func mint(contract *client.Contract, address, amount string) {
+	fmt.Printf("\n--> Submit Transaction: mint\n")
+
+	_, err := contract.SubmitTransaction("mint", address, amount)
+	if err != nil {
+		fmt.Println("failed to submit transaction: %w", getErrorDetails(err))
+		return
+	}
+
+	fmt.Printf("*** Transaction committed successfully\n")
+}
+
+func balanceOf(contract *client.Contract, owner string) {
+	fmt.Println("\n--> Evaluate Transaction: balanceOf")
+
+	evaluateResult, err := contract.EvaluateTransaction("BalanceOf", owner)
+	if err != nil {
+		fmt.Println("failed to evaluate transaction: %w", err)
+	}
+	result := formatJSON(evaluateResult)
+
+	fmt.Printf("*** Result:%s\n", result)
+}
+func GenericEvaluateTransaction(contract *client.Contract, fnName string, args ...string) {
+	fmt.Println("\n--> Evaluate Transaction: " + fnName)
+
+	evaluateResult, err := contract.EvaluateTransaction(fnName, args...)
+	if err != nil {
+		fmt.Println("failed to evaluate transaction: %w", err)
+	}
+	// result := formatJSON(evaluateResult)
+
+	fmt.Printf("*** Result:%s\n", evaluateResult)
+}
+
+func GenericSubmitTransaction(contract *client.Contract, fnName string, args ...string) {
+	fmt.Println("\n--> Submit Transaction:" + fnName)
+
+	_, err := contract.SubmitTransaction(fnName, args...)
+	if err != nil {
+		fmt.Println("failed to submit transaction: %w", getErrorDetails(err))
+		return
+	}
+
+	fmt.Printf("*** Transaction committed successfully\n")
+}
+
+func extractErrorMessageFromGrpcStatus(transactionError *client.TransactionError) error {
+	// log := utils.GetLoggingInstance().Log
+
+	if transactionError != nil {
+		grpcStatus := transactionError.GRPCStatus()
+		if grpcStatus != nil {
+			details := grpcStatus.Details()
+			if len(details) > 0 {
+				detail, ok := details[0].(*gateway.ErrorDetail)
+				if ok {
+					fmt.Println("Error details:", detail.Message)
+					return fmt.Errorf("%v", detail.Message)
+				}
+			}
+		}
+	}
+	return nil
+}
+
+func getErrorDetails(err error) error {
+	// log := utils.GetLoggingInstance().Log
+
+	transactionError, ok := err.(*client.TransactionError)
+	if ok {
+		err := extractErrorMessageFromGrpcStatus(transactionError)
+		if err != nil {
+			return err
+		}
+	}
+
+	endorseError, ok := err.(*client.EndorseError)
+	if ok {
+		transactionError := endorseError.TransactionError
+		err := extractErrorMessageFromGrpcStatus(transactionError)
+		if err != nil {
+			return err
+		}
+	}
+
+	submitError, ok := err.(*client.SubmitError)
+	if ok {
+		transactionError := submitError.TransactionError
+		err := extractErrorMessageFromGrpcStatus(transactionError)
+		if err != nil {
+			return err
+		}
+	}
+
+	commitStatusError, ok := err.(*client.CommitStatusError)
+	if ok {
+		transactionError := commitStatusError.TransactionError
+		err := extractErrorMessageFromGrpcStatus(transactionError)
+		if err != nil {
+			return err
+		}
+	}
+
+	errorStatus := status.Convert(err)
+	if errorStatus != nil {
+		details := errorStatus.Details()
+		if len(details) > 0 {
+			detail := details[0]
+			errorDetail, ok := detail.(*gateway.ErrorDetail)
+			if ok {
+				fmt.Println("Error details:", errorDetail.Message)
+				return fmt.Errorf("%v", errorDetail.Message)
+			}
+		}
+	}
+
+	return err
 }
 
 // newGrpcConnection creates a gRPC connection to the Gateway server.
@@ -276,6 +475,9 @@ func exampleErrorHandling(contract *client.Contract) {
 
 // Format JSON data
 func formatJSON(data []byte) string {
+	if len(data) == 0 {
+		return "No data available"
+	}
 	var prettyJSON bytes.Buffer
 	if err := json.Indent(&prettyJSON, data, "", "  "); err != nil {
 		panic(fmt.Errorf("failed to parse JSON: %w", err))
